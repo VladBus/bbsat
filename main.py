@@ -15,7 +15,7 @@ schedule.every().wednesday.at("02:45").do(lambda: os.system(f"python {statistic_
 schedule.every().wednesday.at("03:00").do(lambda: os.system(f"python {send_message_path}"))
 
 # Завершение программы через 5 минут после последней задачи
-schedule.every().day.at("01:55").do(lambda: exit())
+schedule.every().day.at("03:08").do(lambda: exit())
 
 # Бесконечный цикл для выполнения задач
 while True:
