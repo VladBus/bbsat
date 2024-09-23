@@ -15,7 +15,7 @@ today = datetime.today()
 end_date = today.date() - timedelta(days=1)
 start_date = end_date - timedelta(days=6)
 message_path = r'S:\message'
-addr_to = 'a.sokolov@aari.ru, vvbusev@aari.ru, anikulina@aari.ru'  # Получатели
+addr_to = 'a.sokolov@aari.ru, vvbusev@aari.ru, anikulina@aari.ru, karan@aari.ru'  # Получатели
 # addr_to = 'vvbusev@aari.ru'  # Проверочный адрес, нужен был только во время разработки
 addr_from = "vvbusev@aari.ru"  # Отправитель
 password = r"AuVF7fJmhH3bX"  # Пароль к почте
