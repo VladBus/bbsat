@@ -19,35 +19,45 @@ logging.basicConfig(
 )
 
 # Запланированные задачи
-schedule.every().day.at("00:05").do(lambda: run_script(SORT_FILES_PATH))
-schedule.every().day.at("00:50").do(lambda: run_script(TIFF_COMPRESSOR_PATH))
-schedule.every().wednesday.at("02:00").do(lambda: run_script(STATISTIC_PATH))
-schedule.every().wednesday.at("02:45").do(lambda: run_script(SEND_MESSAGE_PATH))
+schedule.every().day.at("00:02").do(lambda: run_script(SORT_FILES_PATH))
+schedule.every().day.at("00:30").do(lambda: run_script(TIFF_COMPRESSOR_PATH))
+schedule.every().wednesday.at("02:20").do(lambda: run_script(STATISTIC_PATH))
+schedule.every().wednesday.at("02:50").do(lambda: run_script(SEND_MESSAGE_PATH))
 
 # Завершение программы в разное время для разных дней недели
 schedule.every().wednesday.at("03:00").do(lambda: exit(0))  # Среда
-schedule.every().day.at("02:10").do(lambda: exit(0))  # Все остальные дни
+schedule.every().day.at("02:25").do(lambda: exit(0))  # Все остальные дни
 
 
 # Функция для запуска скриптов
 def run_script(script_path):
     logging.info(f"Проверка существования скрипта: {script_path}")
+
     if not os.path.isfile(script_path):
         logging.error(f"Скрипт не найден: {script_path}")
-        return
+        return  # Завершение функции, если файла нет
 
     try:
         logging.info(f"Запуск скрипта: {script_path}")
+
+        # Запись времени начала выполнения скрипта
+        start_time = time.time()
         result = subprocess.run(["python", script_path], capture_output=True, text=True)
+
+        # Запись времени окончания выполнения скрипта
+        end_time = time.time()
+        execution_time = end_time - start_time  # Время выполнения
 
         # Проверяем результат выполнения
         if result.returncode == 0:
-            logging.info(f"Скрипт {script_path} успешно завершён.")
+            logging.info(f"Скрипт {script_path} успешно завершён. Время выполнения: {execution_time:.2f} секунд.")
             if result.stdout:
                 logging.info(f"Вывод: {result.stdout}")
         else:
             logging.error(
-                f"Скрипт {script_path} завершился с ошибкой. Код выхода: {result.returncode}. Ошибка: {result.stderr}")
+                f"Скрипт {script_path} завершился с ошибкой. Код выхода: {result.returncode}. Ошибка: {result.stderr}. \
+                Время выполнения: {execution_time:.2f} секунд."
+            )
     except Exception as e:
         logging.error(f"Ошибка при запуске {script_path}: {e}")
 
