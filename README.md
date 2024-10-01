@@ -11,71 +11,95 @@ GDAL :
 
 ---
 
-+ ## *RU*
++ ## **RU**
 
 ## :white_check_mark: Проект для обработки приходящей спутниковой информации
 
 ### На данный момент в проекте реализованно несколько скриптов для:
 
 + [x] Обработки и сортирования приходящих космических снимков земли.
-+ [x] Расчета статистической информации о планируемых пролетах и снимках.
-+ [x] Рассылки e-mail :e-mail: адресатам краткой сводки с сопутствующей расчетной информации.
++ [x] Расчета статистической информации о количестве обработанных космических снимков земли и приходящих исходных файлов
+  на антенну института.
++ [x] Рассылки e-mail :e-mail: адресатам краткой сводки с сопутствующей расчетной информацией.
 
 ### Дополнительно:
 
-* :chart: Софт данного проекта запускается локально, на персональном компьютере, с помощью планировщика задач (
-  taskschd.msc) несколькими способами:
-    1. Настроить в планировщике задач ежедневный запуск скрипта main.py (смотрите пример 1) (Внимание в скрипте main.py
-       свое внутренне расписание, если что-то меняете то учтите это).
-    2. Есть и альтернативный способ запуска проекта (смотрите пример 2) через .bat файл (Но будьте внимательны для этого
-       способа интерпретатор должен быть в системной переменной Path).
-    3. Аналогично, как, и в первом примере настроить запуск через планировщик задач. Расписание можно настроить и
-       вручную (смотрите пример 3).
+* :information_source: Софт данного проекта запускается локально, на персональном компьютере, с помощью приложения
+  планировщика задач (taskschd.msc) на ОС Windows, несколькими способами:
+    * [x] Первый способ это настроить в планировщике задач ежедневный запуск файла ```run_bbsat.bat``` [*смотрите пример
+      1*] (При использовании данного способа рекомендуется в настройке действия указать файл .bat как аргумент, а
+      программу запуска ```С:\Windows\System32\cmd.exe```. Также не забывайте про права пользователя при настройке
+      работы задачи).
+    * [x] Второй способ это указать планировщику задач напрямую запускать файл ```main.py``` [*смотрите пример 2*] (Но
+      будьте внимательны для реализации этого способа main.py должен подаваться как аргумент, а интерпретатор как
+      программа запуска).
+    * [x] Третий способ аналогично, как, и во втором способе, но уже настроить запуск не одного, а четырех
+      скриптов: ```SortFilesByData.py```, ```tiff_comperssor.py```, ```statistic.py```, ```send_message.py``` через
+      планировщик задач.
+      Расписание можно настроить вручную в том-же планировщике задач [*смотрите пример 3*].
+
+* :ballot_box_with_check: В проекте также организован вывод хода работы и информации об ошибке или успехе в специальные
+  файлы логирования
+  которые нызываются: ```tack_log.txt```, ```bat_log.txt```. Учтите что если не будете использовать для запуска
+  файлы ```main.py``` и ```run_bbsat.bat``` то и логирования не будет.
 
 ---
 
-+ ## *EN*
++ ## **EN**
 
 ## :white_check_mark: Project for processing incoming satellite information
 
 ### At the moment, the project has implemented several scripts for:
 
 + [x] Processing and sorting incoming space images of the Earth.
-+ [x] Calculating statistical information about planned flights and images.
++ [x] Calculating statistical information on the number of processed space images of the Earth and incoming source files
+  to the institute's antenna.
 + [x] Sending e-mail :e-mail: to recipients of a brief summary with accompanying calculation information.
 
-### Additionally:
+### Additional:
 
-* :chart: The software of this project is launched locally, on a personal computer, using the task scheduler (
-  taskschd.msc) in several ways:
-    1. Set up a daily launch of the main.py script in the task scheduler (see example 1) (Attention, the main.py script
-       has its own internal schedule, if you change something, take this into account).
-    2. There is also an alternative way to launch a project (see example 2) via a .bat file (But be careful with this
-       method, the interpreter must be in the system variable Path).
-    3. Similarly, as in the first example, configure the launch via the task scheduler. The schedule can also be
-       configured manually (see example 3).
+* :information_source: The software of this project is launched locally, on a personal computer, using the task
+  scheduler application (taskschd.msc) on Windows OS, in several ways:
+    * [x] The first way is to configure the task scheduler to launch the file ```run_bbsat.bat``` daily [*see example
+      1*] (
+      When using this method, it is recommended to specify the .bat file as an argument in the action setup, and the
+      launcher ```С:\Windows\System32\cmd.exe```. Also, do not forget about user rights when setting up the task).
+    * [x] The second way is to tell the task scheduler to directly launch the file ```main.py``` [*see example 2*] (But
+      be
+      careful that to implement this method, main.py must be supplied as an argument, and the interpreter as the
+      launcher).
+    * [x] The third method is similar to the second method, but now configure the launch of not one, but four
+      scripts: ```SortFilesByData.py, tiff_comperssor.py, statistic.py, send_message.py``` via the task scheduler. The
+      schedule can be configured manually in the same task scheduler [*see example 3*].
+
+* :ballot_box_with_check: The project also organizes the output of the work progress and information about errors or
+  success in special logging
+  files called: ```tack_log.txt```, ```bat_log.txt```. Note that if you do not use the ```main.py```
+  and ```run_bbsat.bat``` files for launching, there will be no logging.
 
 ---
 
-### Пример планировщик задач : Example task scheduler
+## :clipboard: Пример планировщик задач : Example task scheduler
 
-|    №    | Изображения примеров : Example images |
-|:-------:|:-------------------------------------:|
-| **(1)** |      ![img.png](images/img.png)       |
-| **(2)** |    ![img_1.png](images/img_1.png)     |
-| **(3)** |    ![img_2.png](images/img_2.png)     |
+|    №    |   Изображения примеров : Example images    |
+|:-------:|:------------------------------------------:|
+| **(1)** | ![exemple_1.1.jpg](images/exemple_1.1.jpg) |
+| **(2)** | ![exemple_2.1.jpg](images/exemple_2.1.jpg) |
+| **(3)** | ![exemple_3.1.jpg](images/exemple_3.1.jpg) |
 
-> **!** Пример расписания настроенного в ОС Windows в приложении taskschd.msс
+> **!** Пример расписания настроенного в ОС Windows 10 Pro в приложении taskschd.msс
 >
-> **!** An example of a schedule configured in Windows OS in the taskschd.msc application
+> **!** An example of a schedule configured in Windows 10 Pro OS in the taskschd.msc application
 
 ---
 
-| Центр ледовой и гидрометеорологической информации (ЦЛГМИ) "Север" | Ice and Hydrometeorological Information Center (IHIC) "North" |
-|:-----------------------------------------------------------------:|:-------------------------------------------------------------:|
-|  Арктический и антарктический научно-исследовательский институт   |            Arctic and Antarctic Research Institute            |
-|                   ФГБУ "ААНИИ", Санкт-Петербург                   |                  FSBI "AARI", St. Petersburg                  |
-|                      Почта: vvbusev@aari.ru                       |                    E-mail: vvbusev@aari.ru                    |
+| Центр Ледовой и Гидрометеорологической Информации (ЦЛГМИ) Центр "Север" | Center of Ice and Hydrometeorological Information (CIHMI) Center "Sever" |
+|:-----------------------------------------------------------------------:|:------------------------------------------------------------------------:|
+|     Арктический и антарктический научно-исследовательский институт      |                 Arctic and Antarctic Research Institute                  |
+|                      ФГБУ "ААНИИ", Санкт-Петербург                      |                       FSBI "AARI", St. Petersburg                        |
+|                          Почта: sever@aari.ru                           |                          E-mail: sever@aari.ru                           |
+|                         Почта: vvbusev@aari.ru                          |                         E-mail: vvbusev@aari.ru                          |
+|                     ![logo_ru](images/logo_ru.png)                      |                    ![logo_en.png](images/logo_en.png)                    |
 
 ---
 

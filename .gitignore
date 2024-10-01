@@ -51,4 +51,4 @@ wheels/
 *.egg
 
 # Other directories
-images/
+#images/
