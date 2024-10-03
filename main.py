@@ -3,6 +3,8 @@ import time
 import os
 import logging
 import subprocess
+import sys
+from datetime import datetime
 
 # Настройка базовой директории
 BASE_DIR = "E:\\Programming_Work\\Pycharm_Work\\bbsat\\"
@@ -36,23 +38,25 @@ schedule.every().day.at("00:30").do(lambda: run_script(TIFF_COMPRESSOR_PATH))  #
 schedule.every().wednesday.at("02:25").do(lambda: run_script(STATISTIC_PATH))  # Запуск скрипта статистики
 schedule.every().wednesday.at("02:45").do(lambda: run_script(SEND_MESSAGE_PATH))  # Запуск скрипта отправки сообщений
 
-# Завершение программы каждый день в 2:50
+# Завершение программы каждый день в 2:50 с проверкой на завершение всех задач
 schedule.every().day.at("02:50").do(lambda: complete_tasks_and_exit())  # Проверка завершения задач и выход
 
 
 # Функция для завершения работы программы с учетом выполнения всех задач
 def complete_tasks_and_exit():
-    """Завершает работу программы, дожидаясь выполнения всех запланированных задач."""
+    """Проверка завершения всех задач и завершение программы."""
     unfinished_jobs = schedule.get_jobs()  # Получаем все запланированные задачи
-    if unfinished_jobs:  # Проверка на незавершенные задачи
-        logging.info(f"Ожидание завершения задач перед выходом: {unfinished_jobs}")  # Логирование оставшихся задач
-        time.sleep(30)  # Задержка для завершения задач
-        unfinished_jobs = schedule.get_jobs()  # Проверяем снова
-        if unfinished_jobs:  # Если есть незавершенные задачи
-            logging.info("Некоторые задачи все еще выполняются, завершение программы не будет выполнено.")
-            return  # Не завершать программу, просто выход из функции
-    logging.info("Все задачи завершены, выходим.")  # Логирование завершения всех задач
-    exit(0)  # Завершение программы
+    now = datetime.now()  # Получаем текущее время в формате datetime
+
+    pending_jobs = [job for job in unfinished_jobs if
+                    job.next_run > now]  # Отбираем задачи, которые еще активны
+
+    if pending_jobs:
+        logging.info(f"Задачи еще выполняются: {pending_jobs}. Попробуем закрыться через 30 секунд.")
+        time.sleep(30)  # Ожидание завершения задач
+    else:
+        logging.info("Все задачи выполнены. Завершаем программу.")
+        sys.exit(0)  # Завершение программы
 
 
 # Функция для запуска скриптов
@@ -80,8 +84,7 @@ def run_script(script_path):
 
         # Проверяем результат выполнения
         if result.returncode == 0:  # Код завершения равен 0 (успех)
-            logging.info(
-                f"Скрипт {script_path} успешно завершён. Время выполнения: {execution_time:.2f} секунд.")  # Лог.успех
+            logging.info(f"Скрипт {script_path} успешно завершён. Время выполнения: {execution_time:.2f} секунд.")
             if result.stdout:  # Если есть вывод
                 logging.info(f"Вывод: {result.stdout}")  # Логирование вывода
         else:
@@ -93,13 +96,13 @@ def run_script(script_path):
 
 
 # Интервал логирования
-log_interval = 60  # Интервал логирования установлен на 60 секунд
+log_interval = 60  # Логирование каждые 60 секунд
 last_log_time = time.time()  # Переменная для отслеживания времени последнего логирования
 
 # Добавляем пустую строку в лог перед новым запуском
 add_blank_line_to_log()
 
-# Бесконечный цикл для выполнения задач
+# Бесконечный цикл для выполнения задач с логированием
 while True:
     current_time = time.time()  # Текущее время
     if current_time - last_log_time >= log_interval:  # Проверка времени для логирования
