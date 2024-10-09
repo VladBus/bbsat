@@ -33,7 +33,7 @@ def add_blank_line_to_log():
 
 
 # Запланированные задачи
-schedule.every().day.at("00:02").do(lambda: run_script(SORT_FILES_PATH))  # Запуск скрипта сортировки
+schedule.every().day.at("00:04").do(lambda: run_script(SORT_FILES_PATH))  # Запуск скрипта сортировки
 schedule.every().day.at("00:30").do(lambda: run_script(TIFF_COMPRESSOR_PATH))  # Запуск скрипта сжатия TIFF
 schedule.every().wednesday.at("02:25").do(lambda: run_script(STATISTIC_PATH))  # Запуск скрипта статистики
 schedule.every().wednesday.at("02:45").do(lambda: run_script(SEND_MESSAGE_PATH))  # Запуск скрипта отправки сообщений
@@ -44,24 +44,24 @@ schedule.every().day.at("02:50").do(lambda: complete_tasks_and_exit())  # Про
 
 # Функция для завершения работы программы с учетом выполнения всех задач
 def complete_tasks_and_exit():
-    """Проверка завершения всех задач и завершение программы."""
-    unfinished_jobs = schedule.get_jobs()  # Получаем все запланированные задачи
-    now = datetime.now()  # Получаем текущее время в формате datetime
+    """Проверка завершения всех задач за текущий день и завершение программы."""
+    now = datetime.now()  # Текущее время
+    today = now.date()  # Текущая дата
 
-    pending_jobs = [job for job in unfinished_jobs if
-                    job.next_run > now]  # Отбираем задачи, которые еще активны
+    # Получаем все запланированные задачи, которые еще не выполнены
+    pending_jobs = [job for job in schedule.get_jobs() if job.next_run.date() == today]
 
     if pending_jobs:
-        logging.info(f"Задачи еще выполняются: {pending_jobs}. Попробуем закрыться через 30 секунд.")
+        logging.info(f"Есть невыполненные задачи на сегодня: {pending_jobs}. Попробуем закрыться через 30 секунд.")
         time.sleep(30)  # Ожидание завершения задач
     else:
-        logging.info("Все задачи выполнены. Завершаем программу.")
+        logging.info("Все задачи на сегодня выполнены. Завершаем программу.")
         sys.exit(0)  # Завершение программы
 
 
 # Функция для запуска скриптов
 def run_script(script_path):
-    """Запускает указанный скрипт и логирование его выполнения."""
+    """Запускает указанный скрипт и логирует его выполнение."""
     logging.info(f"Проверка существования скрипта: {script_path}")  # Логирование проверки существования
 
     if not os.path.isfile(script_path):  # Проверка на существование файла
@@ -96,7 +96,7 @@ def run_script(script_path):
 
 
 # Интервал логирования
-log_interval = 60  # Логирование каждые 60 секунд
+log_interval = 120  # Логирование каждые 120 секунд
 last_log_time = time.time()  # Переменная для отслеживания времени последнего логирования
 
 # Добавляем пустую строку в лог перед новым запуском
