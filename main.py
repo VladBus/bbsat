@@ -4,7 +4,8 @@ import os
 import logging
 import subprocess
 import sys
-from datetime import datetime
+
+# from datetime import datetime
 
 # Настройка базовой директории
 BASE_DIR = "E:\\Programming_Work\\Pycharm_Work\\bbsat\\"
@@ -39,24 +40,31 @@ schedule.every().wednesday.at("02:25").do(lambda: run_script(STATISTIC_PATH))  #
 schedule.every().wednesday.at("02:45").do(lambda: run_script(SEND_MESSAGE_PATH))  # Запуск скрипта отправки сообщений
 
 # Завершение программы каждый день в 2:50 с проверкой на завершение всех задач
-schedule.every().day.at("02:50").do(lambda: complete_tasks_and_exit())  # Проверка завершения задач и выход
+schedule.every().day.at("02:50").do(lambda: tasks_and_exit())  # Проверка завершения задач и выход
 
 
 # Функция для завершения работы программы с учетом выполнения всех задач
-def complete_tasks_and_exit():
-    """Проверка завершения всех задач за текущий день и завершение программы."""
-    now = datetime.now()  # Текущее время
-    today = now.date()  # Текущая дата
+# def complete_tasks_and_exit():
+#     """Проверка завершения всех задач за текущий день и завершение программы."""
+#     now = datetime.now()  # Текущее время
+#     today = now.date()  # Текущая дата
+#
+#     # Получаем все запланированные задачи, которые еще не выполнены
+#     pending_jobs = [job for job in schedule.get_jobs() if job.next_run.date() == today]
+#
+#     if pending_jobs:
+#         logging.info(f"Есть невыполненные задачи на сегодня: {pending_jobs}. Попробуем закрыться через 30 секунд.")
+#         time.sleep(30)  # Ожидание завершения задач
+#     else:
+#         logging.info("Все задачи на сегодня выполнены. Завершаем программу.")
+#         sys.exit(0)  # Завершение программы
 
-    # Получаем все запланированные задачи, которые еще не выполнены
-    pending_jobs = [job for job in schedule.get_jobs() if job.next_run.date() == today]
 
-    if pending_jobs:
-        logging.info(f"Есть невыполненные задачи на сегодня: {pending_jobs}. Попробуем закрыться через 30 секунд.")
-        time.sleep(30)  # Ожидание завершения задач
-    else:
-        logging.info("Все задачи на сегодня выполнены. Завершаем программу.")
-        sys.exit(0)  # Завершение программы
+# Функция для завершения работы программы
+def tasks_and_exit():
+    """Завершение программы без проверки задач."""
+    logging.info("Программа завершилась.")
+    sys.exit(0)  # Завершение программы
 
 
 # Функция для запуска скриптов
