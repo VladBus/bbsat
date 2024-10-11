@@ -10,4 +10,6 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo Skript main.py end at %date% %time% >> "S:\message\logofile\bat_log.txt"
 
+echo. >> "S:\message\logofile\bat_log.txt"  REM Добавляем пустую строку для удобства чтения
+
 exit /b %ERRORLEVEL%
