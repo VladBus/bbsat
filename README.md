@@ -30,29 +30,31 @@ GDAL :
     * [x] Реализован проект на операционной системе Windows 10 Pro.
 
 * :large_blue_circle: Пакет GDAL используется в данном проекте как вызываемое из системы приложение (Важно! Чтобы
-  вызывать GDAL из системы он должен быть в системной переменной Path). Само приложение вы можете скачать по данной
+  вызывать GDAL из системы, он должен быть в системной переменной Path). Само приложение вы можете скачать по данной
   ссылке:
   [Ссылка для скачивания GDAL](https://www.gisinternals.com/release.php) - вам понадобится данная версия:
   **release-1930-x64-gdal-3-9-1-mapserver-8-2-0**
 
-* :large_blue_circle: Ниже приведена таблица со всеми импортируемыми пакетами данного проекта [*смотрите таблицу 2*]
+* :red_circle: Ниже приведена таблица со всеми импортируемыми пакетами данного проекта [*смотрите таблицу 2*]
 
 ### Дополнительно:
 
-* #### :information_source: Софт данного проекта запускается локально, на персональном компьютере, с помощью приложения планировщика задач (taskschd.msc) на ОС Windows, несколькими способами:
+* #### :information_source: Софт данного проекта запускается локально, на персональном компьютере, с помощью приложения планировщика задач (taskschd.msc) на ОС Windows 10 Pro, несколькими способами:
     * [x] Первый способ это настроить в планировщике задач ежедневный запуск файла ```run_bbsat.bat``` [*смотрите
-      таблицу 1 пример
-      1*] (При использовании данного способа рекомендуется в настройке действия указать файл .bat как аргумент, а
+      таблицу 1, пример
+      1*] (При использовании данного способа рекомендуется в настройке действия указать файл ```run_bbsat.bat``` как
+      аргумент, а
       программу запуска ```С:\Windows\System32\cmd.exe```. Также не забывайте про права пользователя при настройке
       работы задачи).
-    * [x] Второй способ это указать планировщику задач напрямую запускать файл ```main.py``` [*смотрите таблицу 1 пример
+    * [x] Второй способ это указать планировщику задач напрямую запускать файл ```main.py``` [*смотрите таблицу 1,
+      пример
       2*] (Но
       будьте внимательны для реализации этого способа main.py должен подаваться как аргумент, а интерпретатор как
       программа запуска).
     * [x] Третий способ аналогично, как, и во втором способе, но уже настроить запуск не одного, а четырех
       скриптов: ```SortFilesByData.py```, ```tiff_comperssor.py```, ```statistic.py```, ```send_message.py``` через
       планировщик задач.
-      Расписание можно настроить вручную в том-же планировщике задач [*смотрите таблицу 1 пример 3*].
+      Расписание можно настроить вручную в том-же планировщике задач [*смотрите таблицу 1, пример 3*].
 
 * :ballot_box_with_check: В проекте также организован вывод хода работы и информации об ошибке или успехе в специальные
   файлы логирования
@@ -85,24 +87,25 @@ GDAL :
   [GDAL download link](https://www.gisinternals.com/release.php) - you will need this version:
   **release-1930-x64-gdal-3-9-1-mapserver-8-2-0**
 
-* :large_blue_circle: Below is a table with all imported packages of this project [*see table 2*]
+* :red_circle: Below is a table with all imported packages of this project [*see table 2*]
 
 ### Additional:
 
-* #### :information_source: The software of this project is launched locally, on a personal computer, using the task scheduler application (taskschd.msc) on Windows OS, in several ways:
-    * [x] The first way is to configure the task scheduler to launch the file ```run_bbsat.bat``` daily [*see table 1
+* #### :information_source: The software of this project is launched locally, on a personal computer, using the task scheduler application (taskschd.msc) on Windows 10 Pro OS, in several ways:
+    * [x] The first way is to configure the task scheduler to launch the file ```run_bbsat.bat``` daily [*see table 1,
       example
       1*] (
-      When using this method, it is recommended to specify the .bat file as an argument in the action setup, and the
+      When using this method, it is recommended to specify the ```run_bbsat.bat``` file as an argument in the action
+      setup, and the
       launcher ```С:\Windows\System32\cmd.exe```. Also, do not forget about user rights when setting up the task).
-    * [x] The second way is to tell the task scheduler to directly launch the file ```main.py``` [*see table 1 example
+    * [x] The second way is to tell the task scheduler to directly launch the file ```main.py``` [*see table 1, example
       2*] (But
       be
       careful that to implement this method, main.py must be supplied as an argument, and the interpreter as the
       launcher).
     * [x] The third method is similar to the second method, but now configure the launch of not one, but four
       scripts: ```SortFilesByData.py, tiff_comperssor.py, statistic.py, send_message.py``` via the task scheduler. The
-      schedule can be configured manually in the same task scheduler [*see table 1 example 3*].
+      schedule can be configured manually in the same task scheduler [*see table 1, example 3*].
 
 * :ballot_box_with_check: The project also organizes the output of the work progress and information about errors or
   success in special logging
@@ -138,6 +141,12 @@ GDAL :
 |     Python      |   setuptools    |      68.2.0      |
 |     Python      |     shutils     |      0.1.0       |
 |     Python      |      wheel      |      0.41.2      |
+
+> **!** У данного проекта настроено на локальной машине виртуальное окружение (.venv) что рекомендуется сделать и
+> пользователю, для того что-бы не возникало конфликтов между установленными пакетами.
+>
+> **!** This project has a virtual environment (.venv) configured on the local machine, which is recommended for the
+> user to do so, so that conflicts do not arise between installed packages.
 
 ---
 
