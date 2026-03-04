@@ -6,112 +6,94 @@
 import logging
 import os
 import subprocess
-import sys
 import time
-
 import schedule
 
-# Настройка базовой директории
-BASE_DIR = "E:\\Programming_Work\\VScode_Work\\bbsat\\"
+# --- КОНФИГУРАЦИЯ ПУТЕЙ ---
+BASE_DIR = r"E:\Programming_Work\VScode_Work\bbsat"
+# Новая структура папок согласно твоим изменениям
+REPORTS_DIR = r"S:\reports"
+LOG_DIR = os.path.join(REPORTS_DIR, "logs")
+ARCHIVE_DIR = os.path.join(REPORTS_DIR, "archive_stat")
+LOG_FILE = os.path.join(LOG_DIR, "task_log.txt")
 
-# Настройки путей к скриптам
-LOG_FILE = os.path.join("S:\\message\\logofile\\task_log.txt")
+# Пути к скриптам модулей
+CLEANER_PATH = os.path.join(BASE_DIR, "tiff_processing", "tiff_viirs_cleaner.py")
 SORT_FILES_PATH = os.path.join(BASE_DIR, "tiff_processing", "sort_files_by_date.py")
 TIFF_COMPRESSOR_PATH = os.path.join(BASE_DIR, "tiff_processing", "tiff_compressor.py")
 STATISTIC_PATH = os.path.join(BASE_DIR, "week_message", "statistic.py")
 SEND_MESSAGE_PATH = os.path.join(BASE_DIR, "week_message", "send_message.py")
 
-# Настройка логирования
+# --- ПОДГОТОВКА СРЕДЫ ---
+for folder in [LOG_DIR, ARCHIVE_DIR]:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+# Настройка логирования (добавлена кодировка utf-8)
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8",
 )
 
 
-def add_blank_line_to_log():
-    """Добавляет пустую строку в лог файл перед началом работы программы."""
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "a", encoding="utf-8") as log_file:
-            log_file.write("\n")
-
-
-def tasks_and_exit():
-    """Завершение программы."""
-    logging.info("Программа завершилась.")
-    sys.exit(0)
-
-
 def run_script(script_path):
-    """Запускает указанный скрипт и логирует его выполнение."""
-    logging.info("Проверка существования скрипта: %s", script_path)
-
+    """Безопасный запуск внешних python-скриптов."""
     if not os.path.isfile(script_path):
-        logging.error("Скрипт не найден: %s", script_path)
+        logging.error("Файл не найден: %s", script_path)
         return
 
+    script_name = os.path.basename(script_path)
     try:
-        logging.info("Запуск скрипта: %s", script_path)
-        start_time = time.time()
+        logging.info(">>> СТАРТ: %s", script_name)
+        start_t = time.time()
 
-        # Условие для исключения вывода tiff_compressor
+        # Для компрессора подавляем стандартный вывод, чтобы не раздувать лог-файл
         if script_path == TIFF_COMPRESSOR_PATH:
             result = subprocess.run(
                 ["python", script_path],
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,  # Явное указание для Pylint
-            )
-        else:
-            result = subprocess.run(
-                ["python", script_path],
-                capture_output=True,
+                stderr=subprocess.PIPE,
                 text=True,
                 check=False,
             )
+        else:
+            result = subprocess.run(
+                ["python", script_path], capture_output=True, text=True, check=False
+            )
 
-        end_time = time.time()
-        execution_time = end_time - start_time
+        duration = time.time() - start_t
 
         if result.returncode == 0:
-            logging.info(
-                "Скрипт %s успешно завершён. Время: %.2f сек.",
-                script_path,
-                execution_time,
-            )
-            if hasattr(result, "stdout") and result.stdout:
-                logging.info("Вывод: %s", result.stdout)
+            logging.info("УСПЕХ: %s (время: %.2f сек.)", script_name, duration)
         else:
             logging.error(
-                "Ошибка в %s. Код: %s. Ошибка: %s. Время: %.2f сек.",
-                script_path,
+                "ОШИБКА в %s (Код: %s): %s",
+                script_name,
                 result.returncode,
                 result.stderr,
-                execution_time,
             )
+
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logging.error("Критическая ошибка при запуске %s: %s", script_path, e)
+        logging.error("КРИТИЧЕСКИЙ СБОЙ при запуске %s: %s", script_name, e)
 
 
-# Планирование задач (передаем функцию и аргумент отдельно)
-schedule.every().day.at("00:04").do(run_script, SORT_FILES_PATH)
+# --- РАСПИСАНИЕ ЗАДАЧ ---
+
+# Каждый день: очистка, сортировка, сжатие и сбор данных
+schedule.every().day.at("00:01").do(run_script, CLEANER_PATH)
+schedule.every().day.at("00:05").do(run_script, SORT_FILES_PATH)
 schedule.every().day.at("00:30").do(run_script, TIFF_COMPRESSOR_PATH)
-schedule.every().wednesday.at("02:25").do(run_script, STATISTIC_PATH)
+schedule.every().day.at("02:25").do(run_script, STATISTIC_PATH)
+
+# Раз в неделю: отправка накопленной статистики
 schedule.every().wednesday.at("02:45").do(run_script, SEND_MESSAGE_PATH)
-schedule.every().day.at("02:50").do(tasks_and_exit)
 
-# Константы интервала
-LOG_INTERVAL = 120
-last_log_time = time.time()
+logging.info("=== Планировщик BBSAT запущен и готов к работе ===")
 
-add_blank_line_to_log()
-
-# Бесконечный цикл
-while True:
-    current_time = time.time()
-    if current_time - last_log_time >= LOG_INTERVAL:
-        logging.info("Проверка и выполнение запланированных задач.")
-        last_log_time = current_time
-
-    schedule.run_pending()
-    time.sleep(1)
+if __name__ == "__main__":
+    # Бесконечный цикл ожидания
+    while True:
+        schedule.run_pending()
+        time.sleep(30)

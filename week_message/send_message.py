@@ -1,11 +1,11 @@
 """
 Модуль для автоматической отправки электронных писем с вложениями.
-Отправка выполняется по средам.
+Поддерживает проверку дня недели и ручной запуск.
 """
 
 import os
-import re
 import smtplib
+import sys
 from datetime import datetime, timedelta
 from email.encoders import encode_base64
 from email.header import Header
@@ -18,102 +18,97 @@ from email.utils import formataddr
 TODAY = datetime.today()
 END_DATE = TODAY.date() - timedelta(days=1)
 START_DATE = END_DATE - timedelta(days=6)
-MESSAGE_PATH = r"S:\message"
+MESSAGE_PATH = r"S:\reports\archive_stat"
 
 # --- НАСТРОЙКИ ПОЛУЧАТЕЛЕЙ ---
-# Здесь перечислены все возможные адреса.
 ALL_RECIPIENTS = [
     "a.sokolov@aari.ru",
     "vvbusev@aari.ru",
-    # "anikulina@aari.ru",
-    # "karan@aari.ru",
-    # "sanovikov@aari.ru",
 ]
 
 ADDR_FROM = "vvbusev@aari.ru"
 PASSWORD = r"AuVF7fJmhH3bX"
+SMTP_SERVER = "zmail.aari.ru"
+SMTP_PORT = 465
 
 
 def send_email(recipient_list, msg_subj, msg_text, attachment_files):
     """Отправляет письмо списку получателей с вложениями."""
     if not attachment_files:
-        print("Нет файлов для отправки. Письмо не будет отправлено.")
+        print("Вложения не найдены. Отмена отправки.")
         return
 
     msg = MIMEMultipart()
+    # Указываем отправителя
     msg["From"] = formataddr((str(Header("Владислав Бусев", "utf-8")), ADDR_FROM))
-    # Объединяем список адресов в одну строку через запятую
     msg["To"] = ", ".join(recipient_list)
-    msg["Subject"] = msg_subj
+    # Приводим Header к строке, чтобы Pylance не ругался
+    msg["Subject"] = str(Header(msg_subj, "utf-8"))
 
-    msg.attach(MIMEText(msg_text, "plain"))
+    msg.attach(MIMEText(msg_text, "plain", "utf-8"))
 
     for filepath in attachment_files:
         if not os.path.exists(filepath):
+            print(f"Файл не найден: {filepath}")
             continue
-        with open(filepath, "rb") as attachment:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
-            encode_base64(part)
-            part.add_header(
-                "Content-Disposition",
-                f"attachment; filename= {os.path.basename(filepath)}",
-            )
-            msg.attach(part)
+
+        try:
+            with open(filepath, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+                encode_base64(part)
+                filename = os.path.basename(filepath)
+                part.add_header(
+                    "Content-Disposition",
+                    f'attachment; filename="{filename}"',
+                )
+                msg.attach(part)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"Ошибка при обработке вложения {filepath}: {e}")
 
     try:
-        with smtplib.SMTP_SSL("zmail.aari.ru", 465) as server:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(ADDR_FROM, PASSWORD)
             server.send_message(msg)
-            print(f"Письмо успешно отправлено на адреса: {', '.join(recipient_list)}")
+            print(f"Успех! Письмо отправлено на: {', '.join(recipient_list)}")
     except Exception as err:  # pylint: disable=broad-exception-caught
-        print(f"Ошибка при отправке письма: {err}")
+        print(f"Критическая ошибка SMTP: {err}")
 
 
-# Текст письма
-SUBJECT = "Спутниковая информация из Баренцбурга"
-TEXT = f"""
-В приложении к письму спутниковая информация из Баренцбурга 
+def main_process(force_send=False):
+    """Основной процесс поиска отчета и отправки."""
+
+    if not force_send and TODAY.weekday() != 2:
+        print(f"Сегодня {TODAY.strftime('%A')}, а не среда. Отправка пропущена.")
+        return
+
+    subject = "Спутниковая информация из Баренцбурга"
+    text = f"""В приложении к письму спутниковая информация из Баренцбурга
 с {START_DATE.strftime('%d.%m.%Y')} г. по {END_DATE.strftime('%d.%m.%Y')} г.
 
 Данное письмо сформировано автоматически.
 
-С уважением
+С уважением,
 _________________________
-Соколов Андрей   ::   Бусев Владислав
-Ведущий инженер  ::   Инженер 1 кат.
-Центра ледовой и гидрометеорологической информации "Север",
-ФГБУ "ААНИИ", Санкт-Петербург
+Соколов Андрей  ::  Бусев Владислав
+ФГБУ "ААНИИ", Санкт-Петербург"""
 
-E-mail: a.sokolov@aari.ru 
-E-mail: vvbusev@aari.ru
-Моб.тел.: +7-921-189-17-33"""
-
-if __name__ == "__main__":
-    # Проверка: если сегодня не среда (2 - это среда, так как 0 - понедельник)
-    # Это дополнительная защита, если скрипт запустят случайно не в тот день
-    if TODAY.weekday() != 2:
-        print(
-            f"Сегодня {TODAY.strftime('%A')}. Отправка запланирована только на среду."
-        )
-        # Если хочешь, чтобы скрипт ВСЕ РАВНО работал при ручном запуске,
-        # можешь закомментировать 'exit()'.
-        exit()
-
-    FILES_TO_ATTACH = []
-    today_str_parts = TODAY.strftime("%d-%m-%Y").split("-")
-    REGEX_PATTERN = r"(Satellite_data)_(\d{2})-(\d{2})-(\d{4}).txt"
+    today_str = TODAY.strftime("%d-%m-%Y")
+    files_to_attach = []
 
     if os.path.exists(MESSAGE_PATH):
         for filename in os.listdir(MESSAGE_PATH):
-            match = re.match(REGEX_PATTERN, filename)
-            if (
-                match
-                and match.group(2) == today_str_parts[0]
-                and match.group(3) == today_str_parts[1]
-                and match.group(4) == today_str_parts[2]
-            ):
-                FILES_TO_ATTACH.append(os.path.join(MESSAGE_PATH, filename))
+            if "Satellite_data" in filename and today_str in filename:
+                files_to_attach.append(os.path.join(MESSAGE_PATH, filename))
 
-    # Запуск функции отправки
-    send_email(ALL_RECIPIENTS, SUBJECT, TEXT, FILES_TO_ATTACH)
+    if not files_to_attach:
+        print(f"За сегодня ({today_str}) отчетов для отправки не обнаружено.")
+        return
+
+    send_email(ALL_RECIPIENTS, subject, text, files_to_attach)
+
+
+if __name__ == "__main__":
+    # Проверка на ручной запуск
+    is_manual = len(sys.argv) > 1 or sys.stdin.isatty()
+    main_process(force_send=is_manual)

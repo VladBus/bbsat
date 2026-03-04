@@ -1,54 +1,74 @@
 """
-Модуль для очистки директории от мелких файлов.
-Файлы размером меньше 5 МБ перемещаются в папку временного хранения.
+Модуль для очистки всех спутниковых директорий от мелких "битых" файлов.
+Файлы меньше 200 КБ перемещаются в локальную корзину.
 """
 
 import os
 import shutil
+from datetime import datetime
 
-# Константы (в верхнем регистре согласно PEP 8)
-WORKING_FOLDER = r"R:\2023"
-TRASH_FOLDER = r"D:\temp"
+# --- КОНСТАНТЫ ПУТЕЙ ---
+# Базовая директория, где лежат папки спутников
+BASE_PRODUCTS_PATH = r"S:\Products"
 
-# Меняем рабочую директорию
-if os.path.exists(WORKING_FOLDER):
-    os.chdir(WORKING_FOLDER)
+# Список папок для очистки (согласно твоему скриншоту edited-image.png)
+SATELLITE_FOLDERS = ["METOP", "NOAA", "TERRA", "VIIRS"]
+
+# Локальная корзина на диске D
+TRASH_BASE = r"D:\temp_trash"
 
 
-def list_files(filepath):
-    """Рекурсивно собирает полные пути всех файлов в указанной директории."""
-    paths = []
-    for root, _, files in os.walk(filepath):  # Заменили dirs на _
+def ensure_trash_exists():
+    """Создает папку корзины с подпапкой текущего месяца."""
+    current_month = datetime.now().strftime("%Y-%m")
+    trash_path = os.path.join(TRASH_BASE, current_month)
+    if not os.path.exists(trash_path):
+        os.makedirs(trash_path)
+    return trash_path
+
+
+def clean_folder(folder_path, trash_dir):
+    """Рекурсивно чистит конкретную папку от файлов < 200 КБ."""
+    count = 0
+    SIZE_THRESHOLD_KB = 200
+
+    if not os.path.exists(folder_path):
+        print(f"Пропуск: Папка не найдена {folder_path}")
+        return 0
+
+    for root, _, files in os.walk(folder_path):
         for filename in files:
-            paths.append(os.path.join(root, filename))
-    return paths
+            file_path = os.path.join(root, filename)
+            try:
+                file_size_kb = os.path.getsize(file_path) / 1024
 
+                if file_size_kb < SIZE_THRESHOLD_KB:
+                    dest_path = os.path.join(trash_dir, filename)
 
-def clean_small_files(f_list):
-    """
-    Проверяет размер файлов из списка.
-    Если файл меньше 5120 КБ (5 МБ), перемещает его в TRASH_FOLDER.
-    """
-    # Убрали неиспользуемую переменную files2clean
-    for file_path in f_list:
-        if not os.path.exists(file_path):
-            continue
+                    # Если файл с таким именем уже есть в корзине, добавим метку
+                    if os.path.exists(dest_path):
+                        timestamp = datetime.now().strftime("%H%M%S")
+                        name, ext = os.path.splitext(filename)
+                        dest_path = os.path.join(trash_dir, f"{name}_{timestamp}{ext}")
 
-        file_size = os.path.getsize(file_path) / 1024
-        # Используем basename вместо split для получения имени файла
-        filename = os.path.basename(file_path)
-
-        if file_size < 5120:
-            dest_path = os.path.join(TRASH_FOLDER, filename)
-            print(f"Moving to trash: {dest_path}")
-            shutil.move(file_path, dest_path)
+                    shutil.move(file_path, dest_path)
+                    count += 1
+            except Exception as e:
+                print(f"Ошибка при обработке {filename}: {e}")
+    return count
 
 
 if __name__ == "__main__":
-    # Сначала проверяем, существует ли папка с корзиной
-    if not os.path.exists(TRASH_FOLDER):
-        os.makedirs(TRASH_FOLDER)
+    print(f"--- Старт глобальной очистки S:\\Products (порог 200 КБ) ---")
 
-    # Получаем список файлов и запускаем очистку
-    all_files = list_files(WORKING_FOLDER)
-    clean_small_files(all_files)
+    current_trash = ensure_trash_exists()
+    total_moved = 0
+
+    for sat in SATELLITE_FOLDERS:
+        full_path = os.path.join(BASE_PRODUCTS_PATH, sat)
+        print(f"Сканирую {sat}...")
+        moved = clean_folder(full_path, current_trash)
+        print(f"-> Удалено из {sat}: {moved} шт.")
+        total_moved += moved
+
+    print(f"--- Очистка завершена. Всего перемещено в корзину: {total_moved} ---")

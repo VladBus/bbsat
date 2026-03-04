@@ -1,97 +1,103 @@
 """
-Модуль для сортировки спутниковых снимков по структурированным папкам.
-Распределяет файлы из входных директорий в архив по схеме: Год/Месяц/День/Спутник.
+Модуль для умной сортировки спутниковых снимков.
+Автоматически определяет дату и тип спутника по имени файла.
 """
 
 import os
+import re
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# Константы путей (UPPER_CASE)
-BASE_FOLDER = r"S:\GeoTif"
-TERRA_FOLDER = r"S:\Products\TERRA"
-NOAA_FOLDER = r"S:\Products\NOAA"
-METOP_FOLDER = r"S:\Products\METOP"
+# Константы путей
+BASE_ARCHIVE = r"S:\GeoTif"
+# Словарь: "Путь к источнику" -> "Имя спутника по умолчанию" (если не нашли в имени)
+SOURCE_FOLDERS = {
+    r"S:\Products\TERRA": "TERRA",
+    r"S:\Products\NOAA": "NOAA",
+    r"S:\Products\METOP": "METOP",
+    r"S:\Products\VIIRS": "SMART_DETECT",  # Тут будем искать имя в названии
+}
 
-# Текущая дата
-NOW_TIME = datetime.today()
-NOW_DATE = NOW_TIME.date()
-
-
-def ensure_folder_exists(path_folder):
-    """Проверяет наличие папки, если её нет — создает."""
-    if not os.path.exists(path_folder):
-        os.makedirs(path_folder)
-        print(f"Папка создана: {path_folder}")
+# Регулярное выражение для поиска даты (8 цифр подряд: 20260209)
+DATE_PATTERN = re.compile(r"(\d{8})")
+# Список известных спутников для поиска в именах файлов (папка VIIRS)
+KNOWN_SATS = ["NPP", "NOAA20", "NOAA21", "METOP", "TERRA", "AQUA"]
 
 
-def move_files(source_folder, files_list, dest_folder):
-    """Перемещает файлы из списка в целевую папку."""
-    for filename in files_list:
-        source_path = os.path.join(source_folder, filename)
-        dest_path = os.path.join(dest_folder, filename)
-        try:
-            shutil.move(source_path, dest_path)
-        except OSError as err:
-            print(f"Ошибка при перемещении {filename}: {err}")
+def get_dest_path(filename, default_sat):
+    """Определяет путь назначения на основе имени файла."""
+    # 1. Ищем дату
+    date_match = DATE_PATTERN.search(filename)
+    if not date_match:
+        return None
 
+    date_str = date_match.group(1)
+    try:
+        dt = datetime.strptime(date_str, "%Y%m%d")
+    except ValueError:
+        return None
 
-def get_date_folder_names(initial_date):
-    """Возвращает год, месяц и дату для структуры папок."""
-    year = initial_date.strftime("%Y")
-    month = initial_date.strftime("%m")
-    day_folder = initial_date.strftime("%d-%m-%Y")
-    return year, month, day_folder
-
-
-def filter_and_move_files(sat_folder, ini_date, sat_name, base_dest_folder):
-    """
-    Фильтрует файлы по дате в названии и перемещает их в архив.
-    """
-    if not os.path.exists(sat_folder):
-        print(f"Исходная папка не найдена: {sat_folder}")
-        return
-
-    sat_flist = os.listdir(sat_folder)
-    current_date = ini_date
-
-    while sat_flist:
-        filtered_list = []
-        date_mask = current_date.strftime("%Y%m%d")
-
-        # Фильтрация
-        for filename in sat_flist:
-            if date_mask in filename:
-                filtered_list.append(filename)
-
-        if filtered_list:
-            year, month, day = get_date_folder_names(current_date)
-
-            # Формируем путь: S:\GeoTif\2024\05\20-05-2024\METOP
-            dest_path = os.path.join(base_dest_folder, year, month, day, sat_name)
-
-            ensure_folder_exists(dest_path)
-            move_files(sat_folder, filtered_list, dest_path)
-
-            # Обновляем список (исключаем перемещенные файлы)
-            sat_flist = list(set(sat_flist) - set(filtered_list))
-            print(f"Перемещено {len(filtered_list)} файлов в {dest_path}")
-
-        # Если в папке еще остались файлы, пробуем дату на день раньше
-        if sat_flist:
-            current_date -= timedelta(days=1)
-            # Предохранитель: если мы ушли слишком далеко в прошлое (например, на год)
-            if (ini_date - current_date).days > 365:
-                print(f"Прекращение поиска для {sat_name}: файлы старше года.")
+    # 2. Определяем имя спутника
+    sat_name = default_sat
+    if default_sat == "SMART_DETECT":
+        # Ищем ключевое слово спутника в имени файла (для папки VIIRS)
+        sat_name = "OTHER"
+        for s in KNOWN_SATS:
+            if s in filename.upper():
+                sat_name = s
                 break
-        else:
-            break
+
+    # Строим структуру: S:\GeoTif\2026\02\09-02-2026\NPP
+    year = dt.strftime("%Y")
+    month = dt.strftime("%m")
+    day_folder = dt.strftime("%d-%m-%Y")
+
+    return os.path.join(BASE_ARCHIVE, year, month, day_folder, sat_name)
+
+
+def sort_all_data():
+    """Основной процесс обхода всех папок."""
+    print(f"--- Запуск сортировки: {datetime.now().strftime('%Y-%m-%d %H:%M')} ---")
+
+    for src_path, default_name in SOURCE_FOLDERS.items():
+        if not os.path.exists(src_path):
+            print(f"Папка не найдена, пропускаю: {src_path}")
+            continue
+
+        files = [
+            f for f in os.listdir(src_path) if os.path.isfile(os.path.join(src_path, f))
+        ]
+        if not files:
+            continue
+
+        print(f"Обработка {src_path} ({len(files)} файлов)...")
+
+        for filename in files:
+            dest_dir = get_dest_path(filename, default_name)
+
+            if not dest_dir:
+                # Если дату не нашли — файл не трогаем (может еще пишется?)
+                continue
+
+            # Создаем папку если её нет
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+
+            src_file = os.path.join(src_path, filename)
+            dest_file = os.path.join(dest_dir, filename)
+
+            try:
+                # Проверка: если файл с таким именем уже есть, не перезаписываем
+                if not os.path.exists(dest_file):
+                    shutil.move(src_file, dest_file)
+                else:
+                    # Если дубликат — можно добавить префикс или удалить оригинал
+                    os.remove(src_file)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"Ошибка при перемещении {filename}: {e}")
+
+    print("--- Сортировка завершена ---")
 
 
 if __name__ == "__main__":
-    print(f"Запуск сортировки. Сегодня: {NOW_DATE}")
-
-    # Запуск для каждого типа спутников
-    filter_and_move_files(METOP_FOLDER, NOW_DATE, "METOP", BASE_FOLDER)
-    filter_and_move_files(NOAA_FOLDER, NOW_DATE, "NOAA", BASE_FOLDER)
-    filter_and_move_files(TERRA_FOLDER, NOW_DATE, "TERRA", BASE_FOLDER)
+    sort_all_data()
