@@ -79,11 +79,11 @@ GDAL :
 ### Description:
 
 * #### :ballot_box_with_check: The project is implemented using the following software, modules and libraries:
-* [x] ~~The Python programming language interpreter is version 3.11.4.~~
-* [x] The Python programming language interpreter was migrated to version 3.14.0 in 2026.
-* [x] ~~The code for this project was written in the PyCharm 2024.1.4 (Community Edition) development environment.~~
-* [x] As of 2026, the project has been migrated to the Visual Studio Code development environment (user setup).
-* [x] The project is implemented on the Windows 10 Pro operating system.
+    * [x] ~~The Python programming language interpreter is version 3.11.4.~~
+    * [x] The Python programming language interpreter was migrated to version 3.14.0 in 2026.
+    * [x] ~~The code for this project was written in the PyCharm 2024.1.4 (Community Edition) development environment.~~
+    * [x] As of 2026, the project has been migrated to the Visual Studio Code development environment (user setup).
+    * [x] The project is implemented on the Windows 10 Pro operating system.
 
 * :large_blue_circle: The GDAL package is used in this project as a system-callable application (Important! In order to
   call GDAL from the system, it must be in the system Path variable). You can download the application itself from this
