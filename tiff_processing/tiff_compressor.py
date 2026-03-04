@@ -1,72 +1,72 @@
-# _*_ coding: utf-8 _*_
+"""
+Модуль для компрессии GeoTIFF файлов с использованием GDAL.
+Проверяет размер полученного файла и удаляет исходники.
+"""
 
 import os
 
-# import gdal
-# import glob
-# import shutil
-# from contextlib import suppress
+# Пути к папкам
+PRODUCTS_BBSAT = r"S:\GeoTif"
+TRASH_FOLDER = r"S:\trash"
+COMMAND = "gdal_translate -of Gtiff -co COMPRESS=LZW {input} {output}"
 
-Products_bbsat = r"S:\GeoTif"
-trash_folder = r"S:\trash"
-os.chdir(Products_bbsat)
-
-# file_list = glob.glob('*.geotiff.tif')
-
-command = "gdal_translate -of Gtiff -co COMPRESS=LZW {input} {output}"
+os.chdir(PRODUCTS_BBSAT)
 
 
 def list_files(filepath):
+    """Рекурсивно ищет все файлы .geotiff.tif в указанной директории."""
     paths = []
-    for root, dirs, files in os.walk(filepath):
-        for file in files:
-            if file.endswith(".geotiff.tif"):
-                paths.append(os.path.join(root, file))
+    for root, _, files in os.walk(filepath):  # Заменили dirs на _
+        for filename in files:  # Переименовали во избежание конфликта имен
+            if filename.endswith(".geotiff.tif"):
+                paths.append(os.path.join(root, filename))
     return paths
 
 
 def compressor(file_ini):
-    output_file = file_ini.split(".")[0] + ".tif"
-    os.system(command.format(input=file_ini, output=output_file))
+    """Сжимает файл с помощью gdal_translate и возвращает путь к новому файлу."""
+    # Более надежное получение пути без расширения
+    base_path = os.path.splitext(os.path.splitext(file_ini)[0])[0]
+    output_file = base_path + ".tif"
+    os.system(COMMAND.format(input=file_ini, output=output_file))
     return output_file
 
 
 def tif_size(tif_file):
-    file_size = os.path.getsize(tif_file) / 1024
-    return file_size
+    """Возвращает размер файла в килобайтах."""
+    return os.path.getsize(tif_file) / 1024
 
 
 def file_filter(ini_file, compressed_file):
-    big_tif = tif_size(ini_file)
-    small_tif = tif_size(compressed_file)
-    if small_tif <= big_tif * 0.2:
+    """Сравнивает размеры файлов и удаляет сжатый, если он подозрительно мал."""
+    big_tif_size = tif_size(ini_file)
+    small_tif_size = tif_size(compressed_file)
+
+    if small_tif_size <= big_tif_size * 0.2:
         print(
-            "File size %s is too small, so it  can be deleted: \n Size: %d"
-            % (compressed_file, small_tif)
+            f"File size {compressed_file} is too small, it can be deleted:\n"
+            f"Size: {small_tif_size:.2f} KB"
         )
-        # shutil.move(compressed_file, trash_folder + '\\' + compressed_file.split('\\')[-1])
         os.remove(compressed_file)
     else:
-        print("File size for %s: \n %d" % (compressed_file, small_tif))
+        print(f"File size for {compressed_file}:\n {small_tif_size:.2f} KB")
 
 
-f_list = list_files(Products_bbsat)
+# Получаем список файлов один раз
+FILES_TO_PROCESS = list_files(PRODUCTS_BBSAT)
 
 if __name__ == "__main__":
-    for file in f_list:
+    for file_path in FILES_TO_PROCESS:
         try:
-            light_file = compressor(file)
-            file_filter(file, light_file)
-            # shutil.move(file, trash_folder + '\\' + file.split('\\')[-1])
+            light_file = compressor(file_path)
+            file_filter(file_path, light_file)
         except FileNotFoundError:
-            pass
+            print(f"File not found: {file_path}")
         finally:
-            os.remove(file)
-            print("File %s is moved to trash" % file)
+            # Будь осторожен: оригинальный файл удаляется в любом случае
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"File {file_path} is moved to trash (deleted)")
 
-# --Это для проверки работы Gdal--
-# file1 = r'D:\GeoTif\2024\07\18-07-2024\METOP\Bar-Nord_METOP-C_20240718_130859_29558_CH_1_2_4.geotiff.tif'
-#
-# file2 = r"D:\GeoTif\2024\07\18-07-2024\METOP\Bar-Nord_METOP-C_20240718_130859_29558_CH_1_2_4.tif"
-#
+# Пример для проверки (закомментирован для соответствия лимиту длины строки):
 # os.system(f"gdal_translate.exe -of Gtiff -co COMPRESS=LZW {file1} {file2}")

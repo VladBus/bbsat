@@ -1,0 +1,55 @@
+{
+	"python-envs.defaultEnvManager": "ms-python.python:venv",
+	"python.defaultInterpreterPath": ".venv/Scripts/python.exe",
+	"python.terminal.activateEnvInSelectedTerminal": true,
+	// Линтер и форматирование (современный подход)
+	"python.languageServer": "Pylance",
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "ms-python.black-formatter",
+	"python.linting.enabled": true,
+	"python.linting.pylintEnabled": true,
+	// Чтобы VS Code видел пути твоего проекта
+	"python.analysis.extraPaths": ["./src"],
+	"python.analysis.typeCheckingMode": "basic", // Помогает с типизацией
+	"files.exclude": {
+		"**/__pycache__": true,
+		"**/.pytest_cache": true,
+		"**/.venv": false
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"cSpell.words": [
+		"aari",
+		"bbsat",
+		"Busev",
+		"debugpy",
+		"ERRORLEVEL",
+		"esbenp",
+		"flist",
+		"geotif",
+		"geotiff",
+		"Gtiff",
+		"htmlcov",
+		"logofile",
+		"METOP",
+		"NOAA",
+		"Nord",
+		"nosetests",
+		"pycache",
+		"pylint",
+		"pytest",
+		"PYTHONPATH",
+		"sdist",
+		"subfolders",
+		"venv",
+		"vvenv",
+		"zmail",
+		"ААНИИ",
+		"Баренцбурга",
+		"логирует",
+		"ФГБУ"
+	],
+	// Исключаем файлы из проверки орфографии
+	"cSpell.ignorePaths": [".gitignore", "LICENSE", "*.log", "node_modules"]
+}

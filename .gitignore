@@ -1,18 +1,37 @@
+# IDEs
 .idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
-# dotenv
+# Окружения (Virtual Envs)
+.venv/
+venv/
+env/
+ENV/
 .env
 
-# virtualenv
-.venv
-venv/
-ENV/
+# Кэш и временные файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Сборка и дистрибутивы
+build/
+dist/
+*.egg-info/
+*.egg
+.installed.cfg
+develop-eggs/
+eggs/
+.eggs/
+sdist/
+wheels/
 
-# Unit test / coverage reports
+# Тесты и покрытие
 htmlcov/
 .tox/
 .coverage
@@ -22,33 +41,13 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Логи и системные файлы
+*.log
+pip-log.txt
+.DS_Store
+.history/
 
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Other directories
-#images/
+# Прочее
+# images/ (раскомментируй, если нужно игнорировать папку с картинками)
