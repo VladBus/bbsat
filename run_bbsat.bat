@@ -18,7 +18,7 @@ if exist S:\ (
 )
 
 echo ======================================== >> "%LOG_FILE%"
-echo Запуск планировщика: %date% %time% >> "%LOG_FILE%"
+echo Проверка запуска: %date% %time% >> "%LOG_FILE%"
 
 :: Проверка наличия виртуального окружения
 if not exist "%PYTHON_EXE%" (
@@ -35,11 +35,11 @@ if not exist "%MAIN_SCRIPT%" (
 :: Переходим в рабочую директорию
 cd /d "%PROJECT_DIR%"
 
-:: Запуск основного процесса в фоновом режиме (окно закроется)
+:: Запуск основного процесса в фоновом режиме
 echo Запуск main.py... >> "%LOG_FILE%"
 start "BBSAT Scheduler" /min "%PYTHON_EXE%" "%MAIN_SCRIPT%"
 
-echo [SUCCESS] Планировщик запущен в фоновом режиме >> "%LOG_FILE%"
+echo [SUCCESS] Планировщик запущен (или уже работает) >> "%LOG_FILE%"
 echo Завершение сессии: %date% %time% >> "%LOG_FILE%"
 echo. >> "%LOG_FILE%"
 

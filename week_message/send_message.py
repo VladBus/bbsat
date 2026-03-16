@@ -14,6 +14,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
+from pathlib import Path
 from typing import List
 
 # Глобальные константы
@@ -41,15 +42,49 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def load_env_variable(var_name: str, default: str | None = None) -> str | None:
+    """
+    Загружает переменную из .env файла или переменных окружения.
+    Сначала проверяет os.environ, затем ищет .env файл в корне проекта.
+    """
+    # Сначала проверяем переменные окружения системы
+    value = os.environ.get(var_name)
+    if value:
+        return value
+
+    # Если не найдено, ищем .env файл в корне проекта
+    project_root = Path(__file__).resolve().parent.parent
+    env_file = project_root / ".env"
+
+    if env_file.exists():
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    # Пропускаем комментарии и пустые строки
+                    if not line or line.startswith("#"):
+                        continue
+                    if "=" in line:
+                        key, val = line.split("=", 1)
+                        if key.strip() == var_name:
+                            return val.strip()
+        except (OSError, ValueError) as e:
+            logger.warning("Ошибка при чтении .env файла: %s", e)
+
+    return default
+
+
 def get_password() -> str:
-    """Получает пароль из переменной окружения для безопасности."""
-    password = os.environ.get("BBSAT_EMAIL_PASSWORD")
+    """Получает пароль из .env файла или переменной окружения."""
+    password = load_env_variable("BBSAT_EMAIL_PASSWORD")
     if not password:
-        # Fallback на жестко заданное значение (только для совместимости)
-        password = r"AuVF7fJmhH3bX"
-        logger.warning(
-            "Переменная окружения BBSAT_EMAIL_PASSWORD не установлена. "
-            "Используется пароль по умолчанию."
+        logger.critical(
+            "Пароль не найден! Установите переменную окружения BBSAT_EMAIL_PASSWORD "
+            "или добавьте её в файл .env в корне проекта."
+        )
+        raise ValueError(
+            "Пароль не найден. Установите BBSAT_EMAIL_PASSWORD в .env файле или "
+            "в переменных окружения системы."
         )
     return password
 

@@ -21,6 +21,25 @@ if sys.platform == "win32":
     except (AttributeError, UnicodeError):
         pass
 
+# Устанавливаем UTF-8 для логирования по умолчанию
+if sys.platform == "win32":
+    try:
+        # Переопределяем StreamHandler для использования UTF-8
+        class UTF8StreamHandler(logging.StreamHandler):  # type: ignore[misc]
+            """StreamHandler с принудительной UTF-8 кодировкой."""
+
+            def __init__(self, stream=None):
+                super().__init__(stream)
+                if self.stream and hasattr(self.stream, "reconfigure"):
+                    try:
+                        self.stream.reconfigure(encoding="utf-8")
+                    except (AttributeError, UnicodeError):
+                        pass
+
+        logging.StreamHandler = UTF8StreamHandler  # type: ignore[misc]
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
 # --- КОНФИГУРАЦИЯ ПУТЕЙ ---
 BASE_DIR = r"E:\Programming_Work\VScode_Work\bbsat"
 # Новая структура папок согласно твоим изменениям
@@ -28,6 +47,9 @@ REPORTS_DIR = r"S:\reports"
 LOG_DIR = os.path.join(REPORTS_DIR, "logs")
 ARCHIVE_DIR = os.path.join(REPORTS_DIR, "archive_stat")
 LOG_FILE = os.path.join(LOG_DIR, "task_log.txt")
+PID_FILE = os.path.join(
+    LOG_DIR, "bbsat.pid"
+)  # Файл для проверки запущенного экземпляра
 
 # Пути к скриптам модулей
 CLEANER_PATH = os.path.join(BASE_DIR, "tiff_processing", "tiff_viirs_cleaner.py")
@@ -59,15 +81,15 @@ def setup_environment() -> None:
 
 
 def setup_logging() -> None:
-    """Настраивает логирование в файл и консоль."""
+    """Настраивает логирование в файл и консоль с UTF-8 кодировкой."""
     # Создаем форматер
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Файловый обработчик с UTF-8 кодировкой
-    file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8", errors="replace")
+    # Файловый обработчик с UTF-8 кодировкой (используем codecs для гарантии)
+    file_handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
@@ -197,10 +219,63 @@ def run_scheduler() -> None:
     logging.info("=== Планировщик BBSAT остановлен ===")
 
 
+def check_another_instance() -> bool:
+    """
+    Проверяет, запущен ли другой экземпляр планировщика.
+    Возвращает True, если уже запущен.
+    """
+    # Используем logging напрямую, так как logger ещё не инициализирован
+    if os.path.exists(PID_FILE):
+        try:
+            with open(PID_FILE, "r", encoding="utf-8") as f:
+                old_pid = f.read().strip()
+            # Проверяем, жив ли процесс с этим PID
+            result = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {old_pid}", "/FO", "CSV"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if old_pid in result.stdout:
+                logging.warning("Планировщик уже запущен (PID: %s). Выход.", old_pid)
+                return True
+        except (OSError, ValueError) as e:
+            logging.warning("Ошибка при проверке PID-файла: %s", e)
+
+    # Создаём PID-файл
+    try:
+        with open(PID_FILE, "w", encoding="utf-8") as f:
+            f.write(str(os.getpid()))
+        logging.info("PID-файл создан: %s (PID: %d)", PID_FILE, os.getpid())
+    except OSError as e:
+        logging.warning("Не удалось создать PID-файл: %s", e)
+
+    return False
+
+
+def cleanup_pid_file() -> None:
+    """Удаляет PID-файл при завершении работы."""
+    try:
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
+            logging.info("PID-файл удалён: %s", PID_FILE)
+    except OSError as e:
+        logging.warning("Не удалось удалить PID-файл: %s", e)
+
+
 def main() -> int:
     """Точка входа в приложение."""
     setup_environment()
     setup_logging()
+
+    # Проверяем, не запущен ли другой экземпляр (после инициализации логирования)
+    if check_another_instance():
+        return 1
+
+    # Регистрируем очистку PID-файла при завершении
+    import atexit  # pylint: disable=import-outside-toplevel
+
+    atexit.register(cleanup_pid_file)
 
     # Регистрация обработчиков сигналов
     signal.signal(signal.SIGINT, signal_handler)
