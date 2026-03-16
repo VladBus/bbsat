@@ -39,6 +39,13 @@ GDAL :
 
 - :red_circle: Зависимости проекта указаны в файле [`requirements.txt`](requirements.txt)
 
+- :lock: **Настройка безопасности для отправки e-mail:**
+  Для хранения пароля от почты создайте файл `.env` в корне проекта с содержимым:
+  ```
+  BBSAT_EMAIL_PASSWORD=ваш_пароль
+  ```
+  Файл `.env` автоматически исключён из Git (`.gitignore`) и не попадёт в репозиторий.
+
 ### Дополнительно:
 
 - #### :information_source: Софт данного проекта запускается локально, на персональном компьютере, с помощью приложения планировщика задач (taskschd.msc) на ОС Windows 10 Pro, несколькими способами:
@@ -61,6 +68,12 @@ GDAL :
 - :ballot_box_with_check: В проекте также организован вывод хода работы и информации об ошибке или успехе в специальные
   файлы логирования, которые называются: `task_log.txt`, `bat_startup_log.txt`. Учтите, что если не будете
   использовать для запуска файлы `main.py` и `run_bbsat.bat`, то и логирования не будет.
+
+- :repeat: **Защита от множественных запусков:**
+  При запуске `main.py` автоматически проверяется, не запущен ли уже планировщик.
+  Если обнаружен работающий экземпляр, новый не создаётся.
+  Это позволяет безопасно настроить ежедневный запуск через Планировщик задач Windows —
+  даже если окно не закрывалось неделю, создастся только один экземпляр.
 
 ---
 
@@ -92,6 +105,13 @@ GDAL :
 
 - :red_circle: Project dependencies are listed in the [`requirements.txt`](requirements.txt) file
 
+- :lock: **Security setup for e-mail sending:**
+  To store the email password, create a `.env` file in the project root with the following content:
+  ```
+  BBSAT_EMAIL_PASSWORD=your_password
+  ```
+  The `.env` file is automatically excluded from Git (`.gitignore`) and will not be committed to the repository.
+
 ### Additional:
 
 - #### :information_source: The software of this project is launched locally, on a personal computer, using the task scheduler application (taskschd.msc) on Windows 10 Pro OS, in several ways:
@@ -113,6 +133,12 @@ GDAL :
   success in special logging
   files called: `task_log.txt`, `bat_startup_log.txt`. Note that if you do not use the `main.py`
   and `run_bbsat.bat` files for launching, there will be no logging.
+
+- :repeat: **Multiple launch protection:**
+  When `main.py` starts, it automatically checks if the scheduler is already running.
+  If a running instance is detected, a new one is not created.
+  This allows you to safely schedule daily launches via Windows Task Scheduler —
+  even if the window has not been closed for a week, only one instance will be created.
 
 ---
 
