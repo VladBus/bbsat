@@ -13,7 +13,8 @@ from datetime import datetime
 BASE_PRODUCTS_PATH = r"S:\Products"
 
 # Список папок для очистки (согласно твоему скриншоту edited-image.png)
-SATELLITE_FOLDERS = ["METOP", "NOAA", "TERRA", "VIIRS"]
+# VIIRS временно отключен (не обрабатываем файлы из S:\Products\VIIRS)
+SATELLITE_FOLDERS = ["METOP", "NOAA", "TERRA"]  # , "VIIRS"  # ОТКЛЮЧЕНО
 
 # Локальная корзина на диске D
 TRASH_BASE = r"D:\temp_trash"

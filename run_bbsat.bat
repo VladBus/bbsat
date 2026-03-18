@@ -37,9 +37,19 @@ cd /d "%PROJECT_DIR%"
 
 :: Запуск основного процесса в фоновом режиме
 echo Запуск main.py... >> "%LOG_FILE%"
+echo [%TIME%] Запускаю: "%PYTHON_EXE%" "%MAIN_SCRIPT%" >> "%LOG_FILE%"
+
 start "BBSAT Scheduler" /min "%PYTHON_EXE%" "%MAIN_SCRIPT%"
 
-echo [SUCCESS] Планировщик запущен (или уже работает) >> "%LOG_FILE%"
+:: Проверяем, запустился ли процесс
+timeout /t 3 /nobreak >nul
+tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr /I "main.py" >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo [SUCCESS] Планировщик запущен и работает >> "%LOG_FILE%"
+) else (
+    echo [ERROR] Планировщик НЕ запустился! Проверьте логи >> "%LOG_FILE%"
+)
+
 echo Завершение сессии: %date% %time% >> "%LOG_FILE%"
 echo. >> "%LOG_FILE%"
 

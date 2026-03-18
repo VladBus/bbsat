@@ -13,11 +13,12 @@ from typing import Dict, List, Optional, Tuple
 # Константы путей
 BASE_ARCHIVE = r"S:\GeoTif"
 # Словарь: "Путь к источнику" -> "Имя спутника по умолчанию" (если не нашли в имени)
+# VIIRS временно отключен (не обрабатываем файлы из S:\Products\VIIRS)
 SOURCE_FOLDERS: Dict[str, str] = {
     r"S:\Products\TERRA": "TERRA",
     r"S:\Products\NOAA": "NOAA",
     r"S:\Products\METOP": "METOP",
-    r"S:\Products\VIIRS": "SMART_DETECT",  # Тут будем искать имя в названии
+    # r"S:\Products\VIIRS": "SMART_DETECT",  # ОТКЛЮЧЕНО
 }
 
 # Регулярное выражение для поиска даты (8 цифр подряд: 20260209)

@@ -40,11 +40,17 @@ GDAL :
 - :red_circle: Зависимости проекта указаны в файле [`requirements.txt`](requirements.txt)
 
 - :lock: **Настройка безопасности для отправки e-mail:**
-  Для хранения пароля от почты создайте файл `.env` в корне проекта с содержимым:
-  ```
-  BBSAT_EMAIL_PASSWORD=ваш_пароль
-  ```
-  Файл `.env` автоматически исключён из Git (`.gitignore`) и не попадёт в репозиторий.
+  1. Скопируйте файл `.env.example` в `.env`:
+     ```bash
+     copy .env.example .env
+     ```
+  2. Отредактируйте `.env` и укажите ваш пароль:
+     ```
+     BBSAT_EMAIL_PASSWORD=ваш_пароль
+     ```
+  3. Файл `.env` автоматически исключён из Git (`.gitignore`) и не попадёт в репозиторий.
+
+  **Примечание:** Для тестирования можно использовать шаблон `.env.example` — в нём указан пароль по умолчанию.
 
 ### Дополнительно:
 
@@ -106,11 +112,17 @@ GDAL :
 - :red_circle: Project dependencies are listed in the [`requirements.txt`](requirements.txt) file
 
 - :lock: **Security setup for e-mail sending:**
-  To store the email password, create a `.env` file in the project root with the following content:
-  ```
-  BBSAT_EMAIL_PASSWORD=your_password
-  ```
-  The `.env` file is automatically excluded from Git (`.gitignore`) and will not be committed to the repository.
+  1. Copy the `.env.example` file to `.env`:
+     ```bash
+     copy .env.example .env
+     ```
+  2. Edit `.env` and specify your password:
+     ```
+     BBSAT_EMAIL_PASSWORD=your_password
+     ```
+  3. The `.env` file is automatically excluded from Git (`.gitignore`) and will not be committed to the repository.
+
+  **Note:** For testing purposes, you can use the `.env.example` template — it contains the default password.
 
 ### Additional:
 

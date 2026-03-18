@@ -115,6 +115,10 @@ unsafe-load-any-extension=no
 # In verbose mode, extra non-checker-related info will be displayed.
 #verbose=
 
+# Minimum Python version to use for version dependent checks.
+# Updated for Python 3.14 compatibility
+py-version=3.14
+
 
 [BASIC]
 
@@ -438,7 +442,10 @@ disable=raw-checker-failed,
         deprecated-pragma,
         use-symbolic-message-instead,
         use-implicit-booleaness-not-comparison-to-string,
-        use-implicit-booleaness-not-comparison-to-zero
+        use-implicit-booleaness-not-comparison-to-zero,
+        # Python 3.14 compatibility
+        no-member,
+        not-an-iterable
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

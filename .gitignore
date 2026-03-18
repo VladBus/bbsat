@@ -5,12 +5,19 @@
 !.vscode/tasks.json
 !.vscode/launch.json
 
+# Qwen context (сохраняем только важные файлы)
+.qwen/
+!.qwen/output-language.md
+!.qwen/PROJECT_SUMMARY.md
+Qwen.md
+
 # Окружения (Virtual Envs)
 .venv/
 venv/
 env/
 ENV/
 .env
+!.env.example
 
 # Кэш и временные файлы Python
 __pycache__/

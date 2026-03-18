@@ -21,25 +21,6 @@ if sys.platform == "win32":
     except (AttributeError, UnicodeError):
         pass
 
-# Устанавливаем UTF-8 для логирования по умолчанию
-if sys.platform == "win32":
-    try:
-        # Переопределяем StreamHandler для использования UTF-8
-        class UTF8StreamHandler(logging.StreamHandler):  # type: ignore[misc]
-            """StreamHandler с принудительной UTF-8 кодировкой."""
-
-            def __init__(self, stream=None):
-                super().__init__(stream)
-                if self.stream and hasattr(self.stream, "reconfigure"):
-                    try:
-                        self.stream.reconfigure(encoding="utf-8")
-                    except (AttributeError, UnicodeError):
-                        pass
-
-        logging.StreamHandler = UTF8StreamHandler  # type: ignore[misc]
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-
 # --- КОНФИГУРАЦИЯ ПУТЕЙ ---
 BASE_DIR = r"E:\Programming_Work\VScode_Work\bbsat"
 # Новая структура папок согласно твоим изменениям
@@ -88,15 +69,23 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Файловый обработчик с UTF-8 кодировкой (используем codecs для гарантии)
+    # Файловый обработчик с UTF-8 кодировкой
+    # Используем 'utf-8' без BOM (стандарт для логирования)
     file_handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
     # Консольный обработчик с UTF-8 кодировкой
+    # Переопределяем stream для использования UTF-8
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
+    # Пытаемся перекодировать stdout в UTF-8 (Windows)
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+        except (AttributeError, UnicodeError):
+            pass
 
     # Корневой логер (logger)
     root_logger = logging.getLogger()
@@ -222,13 +211,14 @@ def run_scheduler() -> None:
 def check_another_instance() -> bool:
     """
     Проверяет, запущен ли другой экземпляр планировщика.
-    Возвращает True, если уже запущен.
+    Возвращает True, если уже запущен (нужно выйти).
     """
     # Используем logging напрямую, так как logger ещё не инициализирован
     if os.path.exists(PID_FILE):
         try:
             with open(PID_FILE, "r", encoding="utf-8") as f:
                 old_pid = f.read().strip()
+
             # Проверяем, жив ли процесс с этим PID
             result = subprocess.run(
                 ["tasklist", "/FI", f"PID eq {old_pid}", "/FO", "CSV"],
@@ -236,13 +226,31 @@ def check_another_instance() -> bool:
                 text=True,
                 check=False,
             )
+
             if old_pid in result.stdout:
+                # Процесс жив — выходим
                 logging.warning("Планировщик уже запущен (PID: %s). Выход.", old_pid)
                 return True
+            else:
+                # Процесс мёртв — удаляем старый PID и продолжаем
+                logging.info(
+                    "Найден старый PID-файл (PID: %s), процесс мёртв. Удаляю.",
+                    old_pid,
+                )
+                try:
+                    os.remove(PID_FILE)
+                except OSError:
+                    pass
+
         except (OSError, ValueError) as e:
             logging.warning("Ошибка при проверке PID-файла: %s", e)
+            # При ошибке удаляем PID-файл на всякий случай
+            try:
+                os.remove(PID_FILE)
+            except OSError:
+                pass
 
-    # Создаём PID-файл
+    # Создаём PID-файл (новый или после удаления старого)
     try:
         with open(PID_FILE, "w", encoding="utf-8") as f:
             f.write(str(os.getpid()))
